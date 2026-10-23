@@ -63,9 +63,12 @@ itself.
 
 MMSEQS_SEARCH and DAMAGE_ANNOTATE run on node-local disk. `--scratch` (default `/local/scratch`) is
 the directory Nextflow uses for those two tasks; inputs are staged in and outputs copied back.
-The EM tape in `damage-annotate` opens its file with `O_DIRECT`, which tmpfs and most network file
-systems refuse, so the directory must be a real local disk. On a machine without `/local/scratch`,
-pass `--scratch /path/to/local/disk`, or `--scratch false` to run in the work directory.
+The EM tape in `damage-annotate` opens its file with `O_DIRECT`, which tmpfs refuses and some
+network file systems refuse, so the directory should be a real local disk. On a machine without
+`/local/scratch`, pass `--scratch /path/to/local/disk`, or `--scratch false` to run both tasks in the
+work directory. Both settings were run on the test data on a compute node: with `--scratch false`
+the tape landed in the work directory on the Isilon NFS and the run still matched the expected
+table, so on this cluster the work directory is an acceptable fallback.
 
 ## Reading the outputs
 
