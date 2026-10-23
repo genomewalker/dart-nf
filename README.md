@@ -160,6 +160,23 @@ top proteins; and the gene count. The versions of dart, MMseqs2 and Nextflow are
   The report ranks proteins by the ungated `p_protein_damaged` and says so.
 - `<s>.compare.txt` ends with `RESULT: IDENTICAL`.
 
+### The example run: a database large enough for chance hits
+
+`-profile example` searches the same reads against 1,002,005 AlphaFold DB proteins (a uniform random
+subset of the 241M AFDB members) and writes a decoy for every 2nd read. On a compute node it took
+under a minute, most of it the 33 s search.
+
+- 73,968 decoys give 515 alignments from 434 decoy queries (0.59% of the decoys submitted).
+- The null fit is `1 own, 5 pooled, 0 unfit`: the 7-9 aa bin has 344 decoy queries and its own
+  Gumbel (mu 29.0, beta 1.76 bits); the other bins share the pooled fit.
+- The real reads get 32,517 alignments from 4,185 reads; 3,098 reads have a mismatch.
+- No read is flagged. `null_p` is the chance that a random query gets a best hit in the read's
+  length bin scoring at least as high, and on this database even the fullest bin (7-9 aa) holds only
+  344 of 73,968 decoys, 0.47%. A bin can only flag when its share of decoys exceeds `--null-p-max`,
+  so at 0.05 every `null reject:` line reads `NA`. That is the intended answer: against a 1M-protein
+  database a hit of this length is rarely a chance hit. On the 241M-protein database the 10-12 aa bin
+  holds 15.6% of the decoys and the same threshold flags its weaker hits.
+
 ## Running on real data
 
 Make a samplesheet with one row per sample:
