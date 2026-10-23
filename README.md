@@ -61,14 +61,15 @@ options as the real proteins, and `hits2emi` fits one Gumbel per aligned-length 
 best hits and writes `<s>.hits.emi.null`. `damage-annotate` finds that file next to the EMI by
 itself.
 
-MMSEQS_SEARCH and DAMAGE_ANNOTATE run on node-local disk. `--scratch` (default `/local/scratch`) is
-the directory Nextflow uses for those two tasks; inputs are staged in and outputs copied back.
-The EM tape in `damage-annotate` opens its file with `O_DIRECT`, which tmpfs refuses and some
-network file systems refuse, so the directory should be a real local disk. On a machine without
-`/local/scratch`, pass `--scratch /path/to/local/disk`, or `--scratch false` to run both tasks in the
-work directory. Both settings were run on the test data on a compute node: with `--scratch false`
-the tape landed in the work directory on the Isilon NFS and the run still matched the expected
-table, so on this cluster the work directory is an acceptable fallback.
+MMSEQS_SEARCH and DAMAGE_ANNOTATE run on node-local disk through Nextflow's `scratch` directive:
+inputs are staged in and outputs copied back. `--scratch` controls it. The default `true` uses the
+node's `$TMPDIR`, or `/tmp` when that is unset, so the quick start runs on any machine. The `local`
+and `slurm` profiles set it to `/local/scratch`, the node-local disk of the Copenhagen cluster. A path
+names another directory and `false` runs both tasks in the work directory. The EM tape in
+`damage-annotate` opens its file with `O_DIRECT`, which tmpfs refuses and some network file systems
+refuse, so the directory should be a real local disk. All three forms were run on the test data on
+a compute node and matched the expected table, including `--scratch false` with the tape in the
+work directory on the Isilon NFS.
 
 ## Reading the outputs
 
@@ -194,7 +195,7 @@ directory.
 ```bash
 nextflow run . -profile slurm --samplesheet samples.csv \
   --db /db/uniref90/uniref90 --dart /path/to/dart --mmseqs /path/to/mmseqs \
-  --outdir results --scratch /local/scratch
+  --outdir results
 ```
 
 `--db` takes a protein FASTA (plain or gzipped) or an MMseqs2 database prefix; with a prefix,
@@ -204,8 +205,9 @@ with `mmseqs createdb ref.faa ref_db && mmseqs createindex ref_db tmp`.
 The `slurm` profile submits every task to Slurm with the resources in `nextflow.config`
 (8 cpus and 16 GB by default, 16 cpus and 32 GB for the search). Adjust `process.queue`,
 `time` and the memory of `MMSEQS_SEARCH` to the database. Nextflow's HyperQueue executor works the
-same way; set `process.executor = 'hq'` in a profile of your own. Keep `--scratch` on a local disk
-of the compute nodes: the MMseqs2 temporary directory and the EM tape both go there.
+same way; set `process.executor = 'hq'` in a profile of your own. The `slurm` profile sets `--scratch /local/scratch`;
+point it at the local disk of your compute nodes, since the MMseqs2 temporary directory and the EM
+tape both go there.
 
 For a study with many samples, one null model per database and search configuration is enough.
 Run this workflow on a few representative samples, pool their `<s>.decoy_hits.tsv` with
@@ -228,7 +230,7 @@ dart README. `dart damage-info study.null` prints the fitted bins and the proven
 | `--search_params` | tutorial options | MMseqs2 options other than matrix, output format and threads |
 | `--null_p_max` | 0.05 | `damage-annotate --null-p-max` |
 | `--annotate_params` | `--auto-calibrate-spurious` | extra `damage-annotate` options |
-| `--scratch` | `/local/scratch` | node-local directory for the search and annotation tasks |
+| `--scratch` | `true` | where the search and annotation tasks run: `true` = node `$TMPDIR` or `/tmp`, a path, or `false` = work dir; `local` and `slurm` profiles set `/local/scratch` |
 | `--expected` | none | per-read table to compare against; set by `-profile test` |
 
 Tutorial and command reference on the DART wiki:
