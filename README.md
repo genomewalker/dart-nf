@@ -3,8 +3,10 @@
 Status as of 2026-10-23: branch null-fdr. Passes `--null-fdr` (per-bin target-decoy FDR, dart
 900e448) instead of `--null-p-max` to damage-annotate. Needs a dart build from the dart null-fdr
 branch: the `local` profile still points at the release build, so pass `--dart` until it lands (or set
-`--null_p_max 0.05`). Runs DART v2.0.0 end to end on the bundled
-test data and reproduces the release's expected per-read table read for read.
+`--null_p_max 0.05`). The per-read table gains `null_q` after `null_p`; `test/expected` predates
+it, so `-profile test` with that build reports a header difference until the fixture is regenerated.
+Runs DART v2.0.0 end to end on the bundled test data and, with the release build, reproduces the
+release's expected per-read table read for read.
 
 The workflow runs, per sample: `dart profile`, `dart predict` with decoy peptides, two MMseqs2
 searches (real and decoy proteins), `dart hits2emi` with the decoy null model, `dart damage-annotate`,
@@ -106,6 +108,9 @@ the gene and protein summaries count them.
   ranks the bin's reads by bit score and flags a read when its target-decoy q-value (the share of
   chance hits expected among the reads at or above its score) exceeds `--null_fdr` (default 0.05).
   Flagged reads get reject bit 1. Set `--null_p_max P` to use the older fixed rule `null_p > P`.
+- `null_q` is that q-value (`NA` without a fitted bin or under `--null_p_max`). Bit 1 is exactly
+  `null_q > --null_fdr`, so `null_q > x` on the table gives any stricter or looser cutoff without a
+  rerun; report.md lists the flagged counts at 0.01, 0.05, 0.1 and 0.2.
 - `em_reject_reason` is a bit mask: 1 = chance hit under the decoy null, 2 = low EM margin,
   4 = high effective reference count. 0 means kept. Values add, so 6 means low margin and high
   reference count.

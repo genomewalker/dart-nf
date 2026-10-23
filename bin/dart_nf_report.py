@@ -11,7 +11,7 @@ REJECT_BITS = {1: 'chance hit (decoy null)', 2: 'low EM margin', 4: 'high effect
 
 
 def opener(path):
-    return gzip.open(path, 'rt') if path.endswith('.gz') else open(path, 'rt')
+    return gzip.open(path, 'rt', encoding='utf-8') if path.endswith('.gz') else open(path, 'rt', encoding='utf-8')
 
 
 def count_fastx(path):
@@ -92,11 +92,11 @@ def main():
     ann = read_tsv(args.annotated)
     genes = read_tsv(args.gene_summary)
     prot = read_tsv(args.protein_summary)
-    with open(args.annotate_log) as f:
+    with open(args.annotate_log, encoding='utf-8') as f:
         log = f.read().splitlines()
-    with open(args.null_info) as f:
+    with open(args.null_info, encoding='utf-8') as f:
         null_info = f.read().strip()
-    with open(args.versions) as f:
+    with open(args.versions, encoding='utf-8') as f:
         versions = f.read().strip()
 
     doc = [f'# dart-nf report: {args.sample}', '', '```', versions, '```', '']
@@ -159,6 +159,16 @@ def main():
     if total_line:
         doc += ['', total_line]
     doc.append('')
+    qs = [fnum(r.get('null_q', 'NA')) for r in ann]
+    qs = [q for q in qs if q is not None]
+    if qs:
+        doc.append('Other FDR cutoffs from the same run: rows of the per-read table (reads with a mismatch) whose '
+                   '`null_q` exceeds each cutoff. Filter `null_q > x` on the table instead of rerunning.')
+        doc.append('')
+        doc.append(md_table(['FDR cutoff', 'flagged', 'kept', 'share flagged'],
+                            [(c, sum(q > c for q in qs), sum(q <= c for q in qs), f'{100 * sum(q > c for q in qs) / len(qs):.2f}%')
+                             for c in (0.01, 0.05, 0.1, 0.2)]))
+        doc.append('')
 
     doc += ['## EM assignment', '']
     keys = ('Alignments:', 'Reads:', 'References:', 'Converged in', 'Unique mappers', 'Multi-mappers',
@@ -237,7 +247,7 @@ def main():
     doc.append(f'{len(genes)} genes pass the gene-summary read thresholds; {anc} have `ancient_frac >= 0.5`.')
     doc.append('')
 
-    with open(args.out, 'w') as f:
+    with open(args.out, 'w', encoding='utf-8') as f:
         f.write('\n'.join(doc) + '\n')
 
 
