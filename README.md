@@ -3,10 +3,9 @@
 Status as of 2026-10-23: branch null-fdr. Passes `--null-fdr` (per-bin target-decoy FDR, dart
 900e448) instead of `--null-p-max` to damage-annotate. Needs a dart build from the dart null-fdr
 branch: the `local` profile still points at the release build, so pass `--dart` until it lands (or set
-`--null_p_max 0.05`). The per-read table gains `null_q` after `null_p`; `test/expected` predates
-it, so `-profile test` with that build reports a header difference until the fixture is regenerated.
-Runs DART v2.0.0 end to end on the bundled test data and, with the release build, reproduces the
-release's expected per-read table read for read.
+`--null_p_max 0.05`). The per-read table gains `null_q` after `null_p`. `test/expected` is dart
+615fe62's tutorial fixture (with `null_q`): `-profile test` with that build reproduces it read for
+read; the 344d19f release build now differs by the missing `null_q` column.
 
 The workflow runs, per sample: `dart profile`, `dart predict` with decoy peptides, two MMseqs2
 searches (real and decoy proteins), `dart hits2emi` with the decoy null model, `dart damage-annotate`,
