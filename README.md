@@ -1,6 +1,6 @@
 # dart-nf
 
-Status as of 2026-10-23: first version. Runs DART v2.0.0 (dart 1.1.0-114-ge8befa9) end to end on
+Status as of 2026-10-23: first version. Runs DART v2.0.0 (dart 1.1.0-116-g344d19f) end to end on
 the bundled test data and reproduces the release's expected per-read table read for read.
 
 The workflow runs, per sample: `dart profile`, `dart predict` with decoy peptides, two MMseqs2
@@ -151,11 +151,11 @@ top proteins; and the gene count. The versions of dart, MMseqs2 and Nextflow are
 - Because one decoy query is not enough to fit a Gumbel, every null bin is `unfit`. `hits2emi` and
   `damage-annotate` both say so, and every `null reject:` line reads `flagged=0` with `NA`. The run
   is then the same as `--no-null`. A real protein database fills the bins.
-- The per-read table has 8,500 rows. 6,704 have `posterior >= 0.5` and 5,027 have `is_damaged = 1`;
-  `classification` is `ancient_confident` for 5,852, `undetermined` for 2,284 and `modern_confident`
-  for 364. `em_reject_reason` is 0 for 7,057 reads, 2 for 638 and 6 for 805; `em_keep` is 0 for 106.
+- The per-read table has 8,500 rows. 4,364 have `posterior >= 0.5` and 1,252 have `is_damaged = 1`;
+  `classification` is `ancient_confident` for 3,137, `undetermined` for 3,367 and `modern_confident`
+  for 1,996. `em_reject_reason` is 0 for 7,057 reads, 2 for 638 and 6 for 805; `em_keep` is 0 for 106.
 - The EM converges in 8 iterations over 45,714 alignments and keeps 21,458 of 21,904 ORFs.
-- 346 genes reach the gene-summary thresholds; 314 of them have `ancient_frac >= 0.5`.
+- 346 genes reach the gene-summary thresholds; 218 of them have `ancient_frac >= 0.5`.
 - The library profile from these synthetic reads has `library_damage_state` 3, so every protein is
   `unauthenticatable` and `auth_binom_call` is `undetermined_low_coverage` for all 7,075 proteins.
   The report ranks proteins by the ungated `p_protein_damaged` and says so.
