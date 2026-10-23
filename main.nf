@@ -126,7 +126,7 @@ process REPORT {
 
     script:
     """
-    { ${params.dart} --version; ${params.mmseqs} version | sed 's/^/mmseqs /'; echo "nextflow ${workflow.nextflow.version}"; echo "dart-nf ${workflow.manifest.version} ${workflow.commitId ?: 'uncommitted'}"; } > ${sample}.versions.txt 2>&1
+    { ${params.dart} --version; ${params.mmseqs} version | sed 's/^/mmseqs /'; echo "nextflow ${workflow.nextflow.version}"; echo "dart-nf ${workflow.manifest.version} \$(git -C ${projectDir} rev-parse --short HEAD 2>/dev/null || echo no-git)"; } > ${sample}.versions.txt 2>&1
     ${params.dart} damage-info ${null_model} > null_info.txt 2>&1
     dart_nf_report.py --sample ${sample} --reads ${reads} --gff ${gff} --decoys ${decoys} \\
         --hits ${hits} --decoy-hits ${decoy_hits} --annotated ${annotated} \\
