@@ -7,7 +7,7 @@ import gzip
 import re
 
 ORF_SUFFIX = re.compile(r'_[+-]_\d+_\d+$')   # predict ORF id = <read>_<strand>_<frame>_<ordinal>
-REJECT_BITS = {1: 'null_p above threshold', 2: 'low EM margin', 4: 'high effective reference count'}
+REJECT_BITS = {1: 'chance hit (decoy null)', 2: 'low EM margin', 4: 'high effective reference count'}
 
 
 def opener(path):
@@ -79,7 +79,6 @@ def main():
     for a in ('sample', 'reads', 'gff', 'decoys', 'hits', 'decoy_hits', 'annotated', 'gene_summary',
               'protein_summary', 'annotate_log', 'null_info', 'versions'):
         ap.add_argument('--' + a.replace('_', '-'), required=True)
-    ap.add_argument('--null-p-max', type=float, default=0.05)
     ap.add_argument('-o', '--out', required=True)
     args = ap.parse_args()
 
@@ -131,19 +130,32 @@ def main():
             null_lines.append(' '.join(block))
     reject = []
     total_line = ''
+    rule, threshold = 'null_p', ''
     for l in log:
-        m = re.match(r'null reject: bin (\S+) reads=(\d+) flagged=(\d+) \(([\d.]+)%\) bits at null_p=([\d.]+): (\S+)', l)
+        m = re.match(r'null reject: bin (\S+) reads=(\d+) flagged=(\d+) \(([\d.]+)%\)(?: chance=(\S+))? '
+                     r'bits at (null_p|null_fdr)=([\d.e-]+): (\S+)', l)
         if m:
-            reject.append((m.group(1), m.group(2), m.group(3), m.group(4) + '%', m.group(6)))
+            rule, threshold = m.group(6), m.group(7)
+            reject.append((m.group(1), m.group(2), m.group(3), m.group(4) + '%', m.group(5) or '', m.group(8)))
         elif l.startswith('null reject:'):
             total_line = l
     for l in null_lines:
         doc.append(l)
     doc.append('')
-    doc.append(f'Reads flagged by `null_p > {args.null_p_max}` per aligned-length bin (`null reject:` lines of damage-annotate). '
-               'The last column is the bit score below which a read in that bin is flagged; NA means the bin holds too few decoys to flag anything.')
-    doc.append('')
-    doc.append(md_table(['aligned length (aa)', 'reads with best hit', 'flagged', 'share', 'bits at null_p threshold'], reject))
+    if rule == 'null_fdr':
+        doc.append(f'Reads flagged as chance hits at a per-bin target-decoy FDR of {threshold} (`null reject:` lines of '
+                   'damage-annotate). `expected chance` is the number of chance best hits expected in the bin among all '
+                   'queries searched (queries times the share of decoys whose best hit fell in the bin). The last column '
+                   'is the lowest kept bit score: reads below it are flagged; NA means nothing in the bin is flagged.')
+        doc.append('')
+        doc.append(md_table(['aligned length (aa)', 'reads with best hit', 'flagged', 'share', 'expected chance',
+                             'lowest kept bits'], reject))
+    else:
+        doc.append(f'Reads flagged by `null_p > {threshold}` per aligned-length bin (`null reject:` lines of damage-annotate). '
+                   'The last column is the bit score below which a read in that bin is flagged; NA means the bin holds too few decoys to flag anything.')
+        doc.append('')
+        doc.append(md_table(['aligned length (aa)', 'reads with best hit', 'flagged', 'share', 'bits at null_p threshold'],
+                            [r[:4] + r[5:] for r in reject]))
     if total_line:
         doc += ['', total_line]
     doc.append('')

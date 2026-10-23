@@ -107,7 +107,7 @@ process DAMAGE_ANNOTATE {
     ${params.dart} damage-annotate --emi ${emi} --damage-index ${agd} \\
         -o ${sample}.annotated.tsv --gene-summary ${sample}.gene_summary.tsv \\
         --protein-summary ${sample}.protein_summary.tsv \\
-        --null-p-max ${params.null_p_max} ${params.annotate_params} \\
+        ${null_rule()} ${params.annotate_params} \\
         --em-tape-dir "\$PWD/em_tape" -t ${task.cpus} -v > ${sample}.damage_annotate.log 2>&1
     rm -rf em_tape
     """
@@ -132,7 +132,7 @@ process REPORT {
         --hits ${hits} --decoy-hits ${decoy_hits} --annotated ${annotated} \\
         --gene-summary ${gene_summary} --protein-summary ${protein_summary} \\
         --annotate-log ${annotate_log} --null-info null_info.txt --versions ${sample}.versions.txt \\
-        --null-p-max ${params.null_p_max} -o ${sample}.report.md
+        -o ${sample}.report.md
     """
 }
 
@@ -152,6 +152,11 @@ process COMPARE_EXPECTED {
     compare_annotated.py ${annotated} ${expected} | tee ${sample}.compare.txt
     test \${PIPESTATUS[0]} -eq 0
     """
+}
+
+// damage-annotate reject rule: the per-bin target-decoy FDR, or the fixed chance rule when --null_p_max is set.
+def null_rule() {
+    return params.null_p_max != null ? "--null-p-max ${params.null_p_max}" : "--null-fdr ${params.null_fdr}"
 }
 
 def resolve_path(base, p) {

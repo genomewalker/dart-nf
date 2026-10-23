@@ -1,7 +1,8 @@
 # dart-nf
 
-Status as of 2026-10-23: first version. Runs DART v2.0.0 (dart 1.1.0-116-g344d19f) end to end on
-the bundled test data and reproduces the release's expected per-read table read for read.
+Status as of 2026-10-23: branch null-fdr. Passes `--null-fdr` (per-bin target-decoy FDR, dart
+900e448) instead of `--null-p-max` to damage-annotate. Runs DART v2.0.0 end to end on the bundled
+test data and reproduces the release's expected per-read table read for read.
 
 The workflow runs, per sample: `dart profile`, `dart predict` with decoy peptides, two MMseqs2
 searches (real and decoy proteins), `dart hits2emi` with the decoy null model, `dart damage-annotate`,
@@ -99,9 +100,11 @@ the gene and protein summaries count them.
   minimum, or `em_ref_neff` (effective number of candidate references) is above the maximum.
   Ambiguous reads keep their row but do not count toward the damage rate of their protein.
 - `null_p` is the chance that a decoy peptide reaches the read's bit score in the same aligned-length
-  bin. `NA` means the bin has no fitted null. A read with `null_p > --null_p_max` (default 0.05)
-  gets reject bit 1.
-- `em_reject_reason` is a bit mask: 1 = `null_p` above the threshold, 2 = low EM margin,
+  bin. `NA` means the bin has no fitted null. The reject rule uses it per bin: damage-annotate
+  ranks the bin's reads by bit score and flags a read when its target-decoy q-value (the share of
+  chance hits expected among the reads at or above its score) exceeds `--null_fdr` (default 0.05).
+  Flagged reads get reject bit 1. Set `--null_p_max P` to use the older fixed rule `null_p > P`.
+- `em_reject_reason` is a bit mask: 1 = chance hit under the decoy null, 2 = low EM margin,
   4 = high effective reference count. 0 means kept. Values add, so 6 means low margin and high
   reference count.
 
@@ -129,9 +132,9 @@ was available. A `_filtered` suffix means the protein failed a mapping filter li
 ### `<s>.damage_annotate.log`
 
 The `null reject:` lines, one per aligned-length bin, give the reads with a best hit in that bin,
-how many were flagged by `null_p`, and the bit score below which a read in that bin is flagged.
-`NA` means the bin holds too small a share of the decoys to flag anything at the chosen
-`--null_p_max`. On a large protein database only the shortest bins (10-12 aa) usually flag.
+how many were flagged, `chance` (the chance best hits expected in the bin among all queries
+searched) and the lowest kept bit score: reads below it are flagged, `all` means the whole bin is
+flagged and `NA` that nothing is. A bin without decoy hits of its own never flags.
 The `EM reassignment` block gives the alignment and read counts, the iterations and the keep
 filter; `Auto-calibration` gives the thresholds used for the gene summary.
 
@@ -171,12 +174,11 @@ under a minute, most of it the 33 s search.
 - The null fit is `1 own, 5 pooled, 0 unfit`: the 7-9 aa bin has 344 decoy queries and its own
   Gumbel (mu 29.0, beta 1.76 bits); the other bins share the pooled fit.
 - The real reads get 32,517 alignments from 4,185 reads; 3,098 reads have a mismatch.
-- No read is flagged. `null_p` is the chance that a random query gets a best hit in the read's
-  length bin scoring at least as high, and on this database even the fullest bin (7-9 aa) holds only
-  344 of 73,968 decoys, 0.47%. A bin can only flag when its share of decoys exceeds `--null-p-max`,
-  so at 0.05 every `null reject:` line reads `NA`. That is the intended answer: against a 1M-protein
-  database a hit of this length is rarely a chance hit. On the 241M-protein database the 10-12 aa bin
-  holds 15.6% of the decoys and the same threshold flags its weaker hits.
+- 957 of 4,259 reads with a best hit are flagged as chance hits at an FDR of 0.05. The 7-9 aa bin
+  expects 688 chance best hits among its 871 reads, and even its best read (39 bits) has q 0.30, so
+  the whole bin is flagged. The 10-12 aa bin expects 180 chance hits among 1,004 reads and flags the
+  86 below 32.0 bits. The longer bins have no decoy hits and flag nothing. With dart 900e448 or
+  later; older binaries use the fixed `null_p` rule, which flags nothing on this database.
 
 ## Running on real data
 
@@ -228,7 +230,8 @@ dart README. `dart damage-info study.null` prints the fitted bins and the proven
 | `--domain` | `meta` | `predict --domain` |
 | `--library_type` | `auto` | `profile --library-type` |
 | `--search_params` | tutorial options | MMseqs2 options other than matrix, output format and threads |
-| `--null_p_max` | 0.05 | `damage-annotate --null-p-max` |
+| `--null_fdr` | 0.05 | `damage-annotate --null-fdr`: per-bin target-decoy FDR of chance hits |
+| `--null_p_max` | none | use the fixed `damage-annotate --null-p-max` rule instead |
 | `--annotate_params` | `--auto-calibrate-spurious` | extra `damage-annotate` options |
 | `--scratch` | `true` | where the search and annotation tasks run: `true` = node `$TMPDIR` or `/tmp`, a path, or `false` = work dir; `local` and `slurm` profiles set `/local/scratch` |
 | `--expected` | none | per-read table to compare against; set by `-profile test` |
