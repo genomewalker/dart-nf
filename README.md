@@ -1,7 +1,9 @@
 # dart-nf
 
 Status as of 2026-10-23: branch null-fdr. Passes `--null-fdr` (per-bin target-decoy FDR, dart
-900e448) instead of `--null-p-max` to damage-annotate. Runs DART v2.0.0 end to end on the bundled
+900e448) instead of `--null-p-max` to damage-annotate. Needs a dart build from the dart null-fdr
+branch: the `local` profile still points at the release build, so pass `--dart` until it lands (or set
+`--null_p_max 0.05`). Runs DART v2.0.0 end to end on the bundled
 test data and reproduces the release's expected per-read table read for read.
 
 The workflow runs, per sample: `dart profile`, `dart predict` with decoy peptides, two MMseqs2
@@ -177,8 +179,9 @@ under a minute, most of it the 33 s search.
 - 957 of 4,259 reads with a best hit are flagged as chance hits at an FDR of 0.05. The 7-9 aa bin
   expects 688 chance best hits among its 871 reads, and even its best read (39 bits) has q 0.30, so
   the whole bin is flagged. The 10-12 aa bin expects 180 chance hits among 1,004 reads and flags the
-  86 below 32.0 bits. The longer bins have no decoy hits and flag nothing. With dart 900e448 or
-  later; older binaries use the fixed `null_p` rule, which flags nothing on this database.
+  86 below 32.0 bits. The longer bins have no decoy hits and flag nothing. This needs dart 900e448
+  or later; an older `damage-annotate` refuses `--null-fdr` as an unknown option, so with an older
+  binary pass `--null_p_max 0.05`, which on this database flags nothing.
 
 ## Running on real data
 
