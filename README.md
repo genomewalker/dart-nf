@@ -1,11 +1,11 @@
 # dart-nf
 
-Status as of 2026-10-23: branch null-fdr. Passes `--null-fdr` (per-bin target-decoy FDR, dart
-900e448) instead of `--null-p-max` to damage-annotate. Needs a dart build from the dart null-fdr
-branch: the `local` profile still points at the release build, so pass `--dart` until it lands (or set
-`--null_p_max 0.05`). The per-read table gains `null_q` after `null_p`. `test/expected` is dart
-615fe62's tutorial fixture (with `null_q`): `-profile test` with that build reproduces it read for
-read; the 344d19f release build now differs by the missing `null_q` column.
+Status as of 2026-10-23: summary semantics follow DART release/v2.0.0 `6ddfa79` (libtaph
+`c3b3a5d`): EM-weighted candidate credit is the default; use `eff_reads` for abundance.
+The workflow passes `--null-fdr` (per-bin target-decoy FDR) to damage-annotate; set
+`--null_p_max 0.05` for the fixed rule. `test/expected` remains the per-read tutorial fixture
+from 615fe62, including `null_q` after `null_p`. Builds older than 615fe62 lack those null-FDR
+fields and flags.
 
 The workflow runs, per sample: `dart profile`, `dart predict` with decoy peptides, two MMseqs2
 searches (real and decoy proteins), `dart hits2emi` with the decoy null model, `dart damage-annotate`,
@@ -116,7 +116,11 @@ the gene and protein summaries count them.
 
 ### `<s>.gene_summary.tsv`, one row per predicted gene with enough reads
 
-`n_reads`, `n_ancient`, `n_modern`, `n_undetermined` count the assigned reads by classification;
+Use `eff_reads` for abundance: each retained candidate contributes its own EM responsibility
+(`gamma`) to its reference. `n_reads` counts candidate assignments, so the same read can count
+on more than one reference and the column sum can exceed the input read count. Dropped
+candidate mass is not renormalized. This summary rule does not require `--emit-multimap`.
+`n_ancient`, `n_modern`, `n_undetermined` describe the assigned support by classification;
 `ancient_frac` with `ci_low` and `ci_high` is the ancient share with its interval;
 `mean_posterior` and `mean_identity` average the per-read values. `breadth`, `depth_evenness`,
 `start_diversity` and `positional_score` describe how the reads cover the gene.
@@ -125,6 +129,11 @@ from the supported genes of the sample; the values it chose are in `<s>.damage_a
 `Auto-calibration`.
 
 ### `<s>.protein_summary.tsv`, one row per reference protein with assigned reads
+
+Use `eff_reads` (or `assign_eff_reads`) for protein abundance, not `n_reads`. Each candidate
+is credited to its own protein using its own EM weight, including candidates whose alignment
+has no mismatch. `auth_binom_k` and `auth_binom_n` remain integer eligible-read counts, not
+weighted abundance.
 
 The ancient call for a protein is `auth_binom_call`, a binomial test of damaged reads against the
 modern rate; `auth_binom_p_ancient` and `auth_binom_pvalue` are its probability and p-value.
