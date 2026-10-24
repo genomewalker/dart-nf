@@ -1,7 +1,8 @@
 # dart-nf
 
-Status as of 2026-10-23: summary semantics follow DART release/v2.0.0 `6ddfa79` (libtaph
+Status as of 2026-10-24: summary semantics follow DART release/v2.0.0 `122bbc3` (libtaph
 `c3b3a5d`): EM-weighted candidate credit is the default; use `eff_reads` for abundance.
+Damaged-read columns and `auth_binom_k/n` count each read once, on its best hit.
 The workflow passes `--null-fdr` (per-bin target-decoy FDR) to damage-annotate; set
 `--null_p_max 0.05` for the fixed rule. `test/expected` remains the per-read tutorial fixture
 from 615fe62, including `null_q` after `null_p`. Builds older than 615fe62 lack those null-FDR
@@ -132,8 +133,10 @@ from the supported genes of the sample; the values it chose are in `<s>.damage_a
 
 Use `eff_reads` (or `assign_eff_reads`) for protein abundance, not `n_reads`. Each candidate
 is credited to its own protein using its own EM weight, including candidates whose alignment
-has no mismatch. `auth_binom_k` and `auth_binom_n` remain integer eligible-read counts, not
-weighted abundance.
+has no mismatch. The damaged-read columns (`n_damaged`, `mean_p_damaged`, `frac_damaged`,
+`frac_damaged_all`) and `auth_binom_k`/`auth_binom_n` are integer counts, not weighted
+abundance: each read is counted once, on its best hit. `max_p_damaged` and `eff_reads` use
+every credited candidate.
 
 The ancient call for a protein is `auth_binom_call`, a binomial test of damaged reads against the
 modern rate; `auth_binom_p_ancient` and `auth_binom_pvalue` are its probability and p-value.
