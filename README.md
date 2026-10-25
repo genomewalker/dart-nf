@@ -1,8 +1,11 @@
 # dart-nf
 
-Status as of 2026-10-24: summary semantics follow DART release/v2.0.0 `122bbc3` (libtaph
-`c3b3a5d`): EM-weighted candidate credit is the default; use `eff_reads` for abundance.
-Damaged-read columns and `auth_binom_k/n` count each read once, on its best hit.
+Status as of 2026-10-25: summary semantics below describe DART feature branch
+`null-drop-abundance` at `f347cbf` (base release/v2.0.0 `122bbc3`, libtaph `c3b3a5d`),
+awaiting review and not yet merged into release. EM-weighted candidate credit is the default;
+use `eff_reads` for abundance. Null-flagged reads are excluded by default;
+`--keep-null-flagged` restores their previous abundance credit. Damaged-read columns and
+`auth_binom_k/n` count each retained read once, on its best hit.
 The workflow passes `--null-fdr` (per-bin target-decoy FDR) to damage-annotate; set
 `--null_p_max 0.05` for the fixed rule. `test/expected` remains the per-read tutorial fixture
 from 615fe62, including `null_q` after `null_p`. Builds older than 615fe62 lack those null-FDR
@@ -121,6 +124,18 @@ Use `eff_reads` for abundance: each retained candidate contributes its own EM re
 (`gamma`) to its reference. `n_reads` counts candidate assignments, so the same read can count
 on more than one reference and the column sum can exceed the input read count. Dropped
 candidate mass is not renormalized. This summary rule does not require `--emit-multimap`.
+With the feature build named above, a null rule excludes reads carrying reject bit `0x1`
+from gene and protein abundance, coverage, assignment counts, damaged-read and authentication
+counts, and summary inputs. This works with the workflow's auto-discovered sidecar too.
+To retain their previous abundance credit, use
+`--annotate_params '--auto-calibrate-spurious --keep-null-flagged'`; the opt-out is harmless
+without a null model. Bits `0x2`, `0x4` and `0x8` alone retain their existing treatment.
+Per-read TSV/DCX, modern-baseline pooling, library-wide damage statistics and `null reject:`
+lines do not change. The `null drop:` line reports actual removed reads and effective mass,
+or `off (--keep-null-flagged)` for the opt-out.
+This trades short-hit sensitivity for fewer chance-hit assignments: in the known-content
+calibration, 52.8% of true 10-12 aa hits were null-flagged and lose their abundance credit
+under the default. This fraction is calibration-specific, not a universal error rate.
 `n_ancient`, `n_modern`, `n_undetermined` describe the assigned support by classification;
 `ancient_frac` with `ci_low` and `ci_high` is the ancient share with its interval;
 `mean_posterior` and `mean_identity` average the per-read values. `breadth`, `depth_evenness`,
