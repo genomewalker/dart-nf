@@ -1,8 +1,7 @@
 # dart-nf
 
-Status as of 2026-10-25: summary semantics below describe DART feature branch
-`null-drop-abundance` at `f347cbf` (base release/v2.0.0 `122bbc3`, libtaph `c3b3a5d`),
-awaiting review and not yet merged into release. EM-weighted candidate credit is the default;
+Status as of 2026-10-25: summary semantics follow DART release/v2.0.0 at merge `d1837bf`
+(libtaph `c3b3a5d`). EM-weighted candidate credit is the default;
 use `eff_reads` for abundance. Null-flagged reads are excluded by default;
 `--keep-null-flagged` restores their previous abundance credit. Damaged-read columns and
 `auth_binom_k/n` count each retained read once, on its best hit.
