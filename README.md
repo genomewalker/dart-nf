@@ -1,7 +1,7 @@
 # dart-nf
 
-Status as of 2026-10-25: defaults and summary semantics follow DART v2.0.0
-(release/v2.0.0 merge `c60a96f`, libtaph `c3b3a5d`). EM-weighted candidate credit is the default;
+Status as of 2026-10-25: defaults and summary semantics follow DART v2.0.1
+(`82a84e4`, libtaph `933877c`; `-profile test,local` matched the expected per-read table on 2026-10-25). EM-weighted candidate credit is the default;
 use `eff_reads` for abundance. Null-flagged reads are excluded by default;
 `--keep-null-flagged` restores their previous abundance credit. Damaged-read columns and
 `auth_binom_k/n` count each retained read once, on its best hit.
@@ -19,7 +19,8 @@ and a report step. Each step publishes its files to `<outdir>/<sample>/`.
 ## Quick start
 
 Requirements: Nextflow 25.10 or later, Java 17 or later, MMseqs2 15.6f452, Python 3.8 or later,
-and a `dart` binary built from the v2.0.0 release.
+and a `dart` binary built from the v2.0.1 release (v2.0.0 builds the same code but pins a
+libtaph commit that GitHub no longer serves).
 
 ```bash
 cd dart-nf

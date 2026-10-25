@@ -1,4 +1,4 @@
-// dart-nf: DART v2.0.0 end to end, one sample per samplesheet row.
+// dart-nf: DART v2.0.1 end to end, one sample per samplesheet row.
 //   profile -> predict (+decoys) -> MMseqs2 search (real + decoy) -> hits2emi (+null) -> damage-annotate -> report
 // Every process publishes to ${params.outdir}/<sample>/.
 
