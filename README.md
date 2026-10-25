@@ -1,10 +1,12 @@
 # dart-nf
 
-Status as of 2026-10-25: summary semantics follow DART release/v2.0.0 at merge `d1837bf`
-(libtaph `c3b3a5d`). EM-weighted candidate credit is the default;
+Status as of 2026-10-25: defaults and summary semantics follow DART `6082565` on `best-defaults`
+(based on release/v2.0.0 `992deaa`, libtaph `c3b3a5d`). EM-weighted candidate credit is the default;
 use `eff_reads` for abundance. Null-flagged reads are excluded by default;
 `--keep-null-flagged` restores their previous abundance credit. Damaged-read columns and
 `auth_binom_k/n` count each retained read once, on its best hit.
+The workflow keeps `decoy_every = 10`, now DART's default with `--fasta-aa`, and passes
+`--decoy-fasta` to `hits2emi` as required with `--decoy-hits`.
 The workflow passes `--null-fdr` (per-bin target-decoy FDR) to damage-annotate; set
 `--null_p_max 0.05` for the fixed rule. `test/expected` remains the per-read tutorial fixture
 from 615fe62, including `null_q` after `null_p`. Builds older than 615fe62 lack those null-FDR
