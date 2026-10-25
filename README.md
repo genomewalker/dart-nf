@@ -1,7 +1,7 @@
 # dart-nf
 
-Status as of 2026-10-25: defaults and summary semantics follow DART `6082565` on `best-defaults`
-(based on release/v2.0.0 `992deaa`, libtaph `c3b3a5d`). EM-weighted candidate credit is the default;
+Status as of 2026-10-25: defaults and summary semantics follow DART v2.0.0
+(release/v2.0.0 merge `b01731e`, libtaph `c3b3a5d`). EM-weighted candidate credit is the default;
 use `eff_reads` for abundance. Null-flagged reads are excluded by default;
 `--keep-null-flagged` restores their previous abundance credit. Damaged-read columns and
 `auth_binom_k/n` count each retained read once, on its best hit.
