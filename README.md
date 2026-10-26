@@ -113,3 +113,7 @@ and [Interpreting Results](https://github.com/genomewalker/dart/wiki/Interpretin
 
 See the DART [Quick Start Tutorial](https://github.com/genomewalker/dart/wiki/Quick-Start-Tutorial)
 and [Command Reference](https://github.com/genomewalker/dart/wiki/Command-Reference).
+
+## License
+
+MIT. See [LICENSE](LICENSE).
