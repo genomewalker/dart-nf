@@ -1,7 +1,7 @@
 # dart-nf tutorial
 
-This tutorial runs the bundled test, walks through what each step does and what it writes, shows
-how to read the results, and then moves on to real samples on a Slurm cluster.
+This tutorial runs the bundled test, explains each step and the files it writes, shows how to
+read the results, and then runs real samples on a Slurm cluster.
 
 ## 1. Install
 
@@ -51,11 +51,11 @@ expected table was made.
 
 All files land in `results/tutorial/`.
 
-The test checks that the pipeline runs and reproduces known output. It is too small to show two
-of DART's main features at work. The chance-hit filter needs a large database to produce chance
-matches, and here it flags nothing. The ancient-protein call needs a library with a measurable
-damage rate, and the synthetic test library has none. Sections 3 and 4 point out where this
-shows up, and what a real run looks like instead.
+The test only checks that the pipeline runs and gives the expected output. Two things stay
+idle in it. The chance-hit filter flags nothing, because the test database is too small to
+produce chance matches. No protein is called ancient, because the profile of the synthetic
+library does not yield a usable damage rate. Both are explained below, with what to expect on
+real data.
 
 ## 3. What each step does
 
@@ -87,9 +87,9 @@ deduplicated reads. That is why the samplesheet has a separate `profile_reads` c
 into a stop codon (CAA → TAA, for example), so DART weighs each stop by how likely it is to be
 damage before rejecting a frame. A read can give more than one candidate protein (ORF).
 
-It also writes **decoys**: the reversed protein of every 10th read. Reversed proteins look like
-real ones in length and composition but should not match anything for real, so their hits
-show what a chance match looks like.
+It also writes **decoys**: the reversed protein of every 10th read. Reversed proteins have the
+length and composition of real ones but no true matches, so whatever they hit is a chance
+match.
 
 | File | What it is |
 |---|---|
