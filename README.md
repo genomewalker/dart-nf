@@ -50,13 +50,14 @@ nextflow run genomewalker/dart-nf -profile slurm --samplesheet samples.csv \
 `--db` takes a protein FASTA (plain or gzipped) or an MMseqs2 database prefix. Build a
 database once with `mmseqs createdb ref.faa ref_db && mmseqs createindex ref_db tmp`.
 
-The `slurm` profile submits every task to Slurm (8 cpus and 16 GB by default, 16 cpus and 32 GB
-for the search). Adjust the queue, time and search memory in a config of your own for large
-databases.
+The `slurm` profile submits every task to Slurm with 8 CPUs and 16 GB, and 16 CPUs and 32 GB
+for the search. For a large database, set the queue, time and search memory in your own config
+(`-c my.config`).
 
-MMSEQS_SEARCH and DAMAGE_ANNOTATE run in node-local scratch. `--scratch true` (default) uses
-`$TMPDIR` or `/tmp`; a path selects another directory; `false` runs in the work directory. The
-EM tape in `damage-annotate` opens its file with `O_DIRECT`, so use a local disk, not tmpfs.
+MMSEQS_SEARCH and DAMAGE_ANNOTATE run in node-local scratch. By default (`--scratch true`) that
+is `$TMPDIR`, or `/tmp` if it is unset. Pass a path to use another directory, or `false` to run
+in the work directory. `damage-annotate` writes its EM tape with `O_DIRECT`, so the scratch must
+be a local disk, not tmpfs.
 
 ## Pipeline
 
@@ -78,10 +79,10 @@ one Gumbel per aligned-length bin to the decoy best hits. `damage-annotate` flag
 per-bin target-decoy q-value exceeds `--null_fdr` and leaves them out of gene and protein
 abundance.
 
-For a study with many samples, one null per database and search configuration is enough. Run the
+Samples searched against the same database with the same options can share one null. Run the
 pipeline on a few representative samples, pool their decoy hits with
-`dart null -o study.null --db-label mydb a.decoy_hits.tsv b.decoy_hits.tsv`, and pass
-`--annotate_params '--em-null-model study.null --auto-calibrate-spurious'` for the rest.
+`dart null -o study.null --db-label mydb a.decoy_hits.tsv b.decoy_hits.tsv`, and run the rest
+with `--annotate_params '--em-null-model /abs/path/study.null --auto-calibrate-spurious'`.
 
 ## Outputs
 
