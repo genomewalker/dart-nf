@@ -24,6 +24,9 @@ they come from) and finishes in about a minute on 8 cores. The last step compare
 table with `test/expected/annotated.tsv.gz` and fails if any row differs. With
 `-profile test,conda`, MMseqs2 is installed from Bioconda; `dart` is still taken from `--dart`.
 
+A step-by-step walkthrough, from the test run to running a study on Slurm, is in
+[docs/tutorial.md](docs/tutorial.md).
+
 ## Usage
 
 Make a samplesheet with one row per sample:
